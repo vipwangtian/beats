@@ -61,6 +61,7 @@ grouped in the following categories:
 * <<exported-fields-redis>>
 * <<exported-fields-statsd>>
 * <<exported-fields-system>>
+* <<exported-fields-tengine>>
 * <<exported-fields-traefik>>
 * <<exported-fields-uwsgi>>
 * <<exported-fields-vsphere>>
@@ -30119,6 +30120,36 @@ The OS uptime in milliseconds.
 type: long
 
 format: duration
+
+--
+
+[[exported-fields-tengine]]
+== tengine fields
+
+tengine module
+
+
+
+[float]
+=== tengine
+
+
+
+
+[float]
+=== reqstatus
+
+reqstatus
+
+
+
+*`tengine.reqstatus.example`*::
++
+--
+Example field
+
+
+type: keyword
 
 --
 
