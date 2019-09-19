@@ -1,0 +1,39 @@
+////
+This file is generated! See scripts/mage/docs_collector.go
+////
+
+[[metricbeat-module-tengine]]
+== tengine module
+
+beta[]
+
+This is the tengine module.
+
+
+
+[float]
+=== Example configuration
+
+The tengine module supports the standard configuration options that are described
+in <<configuration-metricbeat>>. Here is an example configuration:
+
+[source,yaml]
+----
+metricbeat.modules:
+- module: tengine
+  metricsets: ["reqstatus"]
+  enabled: false
+  period: 10s
+  hosts: ["localhost"]
+
+----
+
+[float]
+=== Metricsets
+
+The following metricsets are available:
+
+* <<metricbeat-metricset-tengine-reqstatus,reqstatus>>
+
+include::tengine/reqstatus.asciidoc[]
+

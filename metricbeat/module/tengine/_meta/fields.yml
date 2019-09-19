@@ -1,0 +1,10 @@
+- key: tengine
+  title: "tengine"
+  release: beta
+  description: >
+    tengine module
+  fields:
+    - name: tengine
+      type: group
+      description: >
+      fields:
