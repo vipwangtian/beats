@@ -52,7 +52,9 @@ func init() {
 // interface methods except for Fetch.
 type MetricSet struct {
 	mb.BaseMetricSet
-	config ReqStatusConfig	
+	config ReqStatusConfig
+	fields []string
+	preMetricSet map[string]common.MapStr
 	http   *helper.HTTP
 }
 
@@ -71,49 +73,72 @@ func New(base mb.BaseMetricSet) (mb.MetricSet, error) {
 	if err != nil {
 		return nil, err
 	}
+	fields := strings.Split(m.config.Fields, " ")
 
 	return &MetricSet{
 		BaseMetricSet: base,
 		config:        config,
+		fields:        fields,
+		preMetricSet   make(map[string]common.MapStr)
 		http:          http,
 	}, nil
+}
+
+func makeMetricSet(line string, m *MetricSet) (common.MapStr, error) {
+	values := strings.Split(line, ",")
+	kv := values[0]
+
+	currentSet := make(common.MapStr)
+	retSet := make(common.MapStr)
+	for i, value := range values {
+		if i == 0 {
+			currentSet[m.fields[i]] = value
+			continue
+		}
+		intValue, err := strconv.Atoi(value)
+		if err != nil {
+			currentSet[m.fields[i]] = nil
+		} else {
+			currentSet[m.fields[i]] = intValue
+		}
+	}
+
+	preSet, ok = m.preMetricSet[kv]
+	if ok {
+		for k, v := range currentSet {
+			if k == kv {
+				retSet[k] = k
+			} else {
+				retSet[k] = v - preSet[k]
+			}
+		}
+	}
+	m.preMetricSet[kv] = currentSet
+	
+	if ok {
+		return retSet, nil
+	} else {
+		return nil, fmt.Errorf("have not pre set")
+	}
 }
 
 // Fetch methods implements the data gathering and data conversion to the right
 // format. It publishes the event which is then forwarded to the output. In case
 // of an error set the Error field of mb.Event or simply call report.Error().
 func (m *MetricSet) Fetch(report mb.ReporterV2) {
-	logp.Info("modules", m.config.Fields)
-	fields := strings.Split(m.config.Fields, " ")
 	scanner, err := m.http.FetchScanner()
 	if err != nil {
+		logp.Info("tengine_reqstatus", err)
 		return
 	}
-	//scanner.Scan()
-	//resp := scanner.Text()
-	//logp.Debug("modules", resp)
-	//lines := strings.Split(resp, "\n")
-	//logp.Info("modules", len(lines))
-	//for _, line := range lines {
+
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(line) > 0 {
-			values := strings.Split(line, ",")
-			tengineFields := make(common.MapStr)
-			for i, field := range fields {
-				if i == 0 {
-					tengineFields[field] = values[i]
-				} else {
-					value, err := strconv.Atoi(values[i])
-					if err != nil {
-						tengineFields[field] = 0
-					} else {
-						tengineFields[field] = value
-					}
-				}
+			if retMetricSet, err := makeMetricSet(line, m); err == nil {
+				event := mb.Event{MetricSetFields: retMetricSet}
+				report.Event(event)
 			}
-			event := mb.Event{MetricSetFields: tengineFields}
-			report.Event(event)
 		}
 	}
 }
