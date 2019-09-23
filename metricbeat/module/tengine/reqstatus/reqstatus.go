@@ -1,7 +1,7 @@
 package reqstatus
 
 import (
-	//"fmt"
+	"fmt"
 	//"time"
 	"strings"
 	"strconv"
@@ -73,13 +73,13 @@ func New(base mb.BaseMetricSet) (mb.MetricSet, error) {
 	if err != nil {
 		return nil, err
 	}
-	fields := strings.Split(m.config.Fields, " ")
+	fields := strings.Split(config.Fields, " ")
 
 	return &MetricSet{
 		BaseMetricSet: base,
 		config:        config,
 		fields:        fields,
-		preMetricSet   make(map[string]common.MapStr)
+		preMetricSet:   make(map[string]common.MapStr),
 		http:          http,
 	}, nil
 }
@@ -103,13 +103,13 @@ func makeMetricSet(line string, m *MetricSet) (common.MapStr, error) {
 		}
 	}
 
-	preSet, ok = m.preMetricSet[kv]
+	preSet, ok := m.preMetricSet[kv]
 	if ok {
 		for k, v := range currentSet {
 			if k == kv {
 				retSet[k] = k
 			} else {
-				retSet[k] = v - preSet[k]
+				retSet[k] = v.(int) - preSet[k].(int)
 			}
 		}
 	}
