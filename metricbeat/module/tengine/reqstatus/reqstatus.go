@@ -86,7 +86,7 @@ func New(base mb.BaseMetricSet) (mb.MetricSet, error) {
 
 func makeMetricSet(line string, m *MetricSet) (common.MapStr, error) {
 	values := strings.Split(line, ",")
-	kv := values[0]
+	kvValue := values[0]
 
 	currentSet := make(common.MapStr)
 	retSet := make(common.MapStr)
@@ -97,23 +97,25 @@ func makeMetricSet(line string, m *MetricSet) (common.MapStr, error) {
 		}
 		intValue, err := strconv.Atoi(value)
 		if err != nil {
-			currentSet[m.fields[i]] = nil
+			currentSet[m.fields[i]] = 0
 		} else {
 			currentSet[m.fields[i]] = intValue
 		}
 	}
 
-	preSet, ok := m.preMetricSet[kv]
+	preSet, ok := m.preMetricSet[kvValue]
 	if ok {
 		for k, v := range currentSet {
-			if k == kv {
-				retSet[k] = k
+			if v == kvValue {
+				retSet[k] = v
 			} else {
-				retSet[k] = v.(int) - preSet[k].(int)
+				currentItem, _ := v.(int)
+				preItem, _ := preSet[k].(int)
+				retSet[k] = currentItem - preItem
 			}
 		}
 	}
-	m.preMetricSet[kv] = currentSet
+	m.preMetricSet[kvValue] = currentSet
 	
 	if ok {
 		return retSet, nil
